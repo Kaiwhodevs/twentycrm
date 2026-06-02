@@ -26,6 +26,16 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - name: Verify release token
+        env:
+          HAS_PAT: ${{ secrets.RELEASE_PAT != '' }}
+        run: |
+          if [ "$HAS_PAT" = "true" ]; then
+            echo "::notice::RELEASE_PAT is configured — tag pushes will trigger the release workflow."
+          else
+            echo "::warning::RELEASE_PAT is NOT set. Tag pushes will use GITHUB_TOKEN and will NOT trigger release-chart.yml. Add the RELEASE_PAT secret to enable hands-off releases."
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
