@@ -1,0 +1,57 @@
+name: Release chart
+
+# Triggered by a v-prefixed tag (pushed by check-upstream-release.yml or by hand).
+# Packages the chart at that version and pushes it to GHCR as an OCI artifact:
+#   oci://ghcr.io/kaiwhodevs/twentycrm-chart:<tag>
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.2
+
+      - name: Resolve version
+        id: version
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          CHART_VERSION=$(yq '.version' Chart.yaml)
+          if [ "$TAG" != "$CHART_VERSION" ]; then
+            echo "Tag ($TAG) does not match Chart.yaml version ($CHART_VERSION)." >&2
+            exit 1
+          fi
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Lint
+        run: helm lint .
+
+      - name: Package
+        run: helm package . --destination dist
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+
+      - name: Push to GHCR
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          helm push "dist/twentycrm-chart-${VERSION}.tgz" "oci://ghcr.io/kaiwhodevs"
+          echo "Pushed oci://ghcr.io/kaiwhodevs/twentycrm-chart:${VERSION}"

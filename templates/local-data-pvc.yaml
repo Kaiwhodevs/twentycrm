@@ -1,0 +1,22 @@
+{{- if .Values.localStorage.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "twentycrm-chart.fullname" . }}-local-data
+  namespace: {{ include "twentycrm-chart.namespace" . }}
+  labels:
+    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: local-data
+  annotations:
+    helm.sh/resource-policy: keep
+    {{- with .Values.commonAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  accessModes:
+    {{- toYaml .Values.localStorage.persistence.accessModes | nindent 4 }}
+  {{- include "twentycrm-chart.storageClass" (dict "value" .Values.localStorage.persistence.storageClass "global" .Values.global) | nindent 2 }}
+  resources:
+    requests:
+      storage: {{ .Values.localStorage.persistence.size }}
+{{- end }}

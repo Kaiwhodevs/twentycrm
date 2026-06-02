@@ -1,0 +1,39 @@
+apiVersion: v2
+name: twentycrm-chart
+description: |
+  Twenty CRM (twentyhq/twenty) packaged for Kubernetes. Mirrors the official
+  twenty-docker docker-compose.yml — same services (server, worker, db, redis),
+  same defaults and environment variables — and is distributed via OCI on GHCR.
+type: application
+# Chart version tracks the upstream Twenty release tag (v-prefixed, e.g. v2.8.0).
+version: v2.8.0
+# Application version — the twentycrm/twenty image tag deployed by default.
+appVersion: v2.8.0
+icon: https://twenty.com/images/core/logo.svg
+home: https://twenty.com
+sources:
+  - https://github.com/twentyhq/twenty
+  - https://github.com/kaiwhodevs/twentycrm-chart
+keywords:
+  - crm
+  - twenty
+  - twentycrm
+maintainers:
+  - name: kaiwhodevs
+    url: https://github.com/kaiwhodevs
+annotations:
+  category: CRM
+  licenses: Apache-2.0
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/links: |
+    - name: Twenty CRM
+      url: https://github.com/twentyhq/twenty
+    - name: Chart source
+      url: https://github.com/kaiwhodevs/twentycrm-chart
+  artifacthub.io/images: |
+    - name: twenty
+      image: twentycrm/twenty:v2.8.0
+    - name: postgres
+      image: postgres:16
+    - name: redis
+      image: redis:latest

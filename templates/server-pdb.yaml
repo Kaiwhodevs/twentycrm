@@ -1,0 +1,24 @@
+{{- if .Values.server.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "twentycrm-chart.serverName" . }}
+  namespace: {{ include "twentycrm-chart.namespace" . }}
+  labels:
+    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.server.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.server.pdb.maxUnavailable }}
+  {{- else }}
+  minAvailable: {{ .Values.server.pdb.minAvailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "twentycrm-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: server
+{{- end }}

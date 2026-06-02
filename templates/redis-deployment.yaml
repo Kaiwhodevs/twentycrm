@@ -1,0 +1,110 @@
+{{- if .Values.redis.enabled }}
+apiVersion: apps/v1
+kind: {{ if .Values.redis.persistence.enabled }}StatefulSet{{ else }}Deployment{{ end }}
+metadata:
+  name: {{ include "twentycrm-chart.redisName" . }}
+  namespace: {{ include "twentycrm-chart.namespace" . }}
+  labels:
+    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.redis.persistence.enabled }}
+  serviceName: {{ include "twentycrm-chart.redisName" . }}
+  {{- end }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "twentycrm-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: redis
+  template:
+    metadata:
+      labels:
+        {{- include "twentycrm-chart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: redis
+      {{- with .Values.commonAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "twentycrm-chart.imagePullSecrets" . | nindent 6 }}
+      {{- with .Values.redis.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: redis
+          image: {{ include "twentycrm-chart.imageRef" (dict "image" .Values.redis.image "tag" (.Values.redis.image.tag | default "latest") "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          {{- with .Values.redis.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          # compose: command ["--maxmemory-policy", "noeviction"]
+          args:
+            - --maxmemory-policy
+            - {{ .Values.redis.maxmemoryPolicy | quote }}
+            {{- if .Values.redis.persistence.enabled }}
+            - --appendonly
+            - "yes"
+            {{- end }}
+          ports:
+            - name: redis
+              containerPort: {{ .Values.redis.service.port }}
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 10
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          {{- with .Values.redis.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- if not .Values.redis.persistence.enabled }}
+      volumes:
+        - name: redis-data
+          emptyDir: {}
+      {{- end }}
+      {{- with .Values.redis.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.redis.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.redis.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.redis.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+        labels:
+          {{- include "twentycrm-chart.selectorLabels" . | nindent 10 }}
+          app.kubernetes.io/component: redis
+      spec:
+        accessModes:
+          {{- toYaml .Values.redis.persistence.accessModes | nindent 10 }}
+        {{- include "twentycrm-chart.storageClass" (dict "value" .Values.redis.persistence.storageClass "global" .Values.global) | nindent 8 }}
+        resources:
+          requests:
+            storage: {{ .Values.redis.persistence.size }}
+  {{- end }}
+{{- end }}

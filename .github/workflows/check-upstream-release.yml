@@ -1,0 +1,104 @@
+name: Check upstream release
+
+# Every 6 hours, look at the latest twentyhq/twenty release. If it is newer than
+# the version this chart currently tracks, bump Chart.yaml + values.yaml, commit,
+# and push a matching v-prefixed git tag. That tag triggers release-chart.yml.
+#
+# Requirements:
+#   - A repository secret named RELEASE_PAT (a PAT / fine-grained token with
+#     "Contents: write"). It is used to push the commit and tag so that the tag
+#     push event is able to trigger the release workflow (the default
+#     GITHUB_TOKEN deliberately cannot trigger other workflows).
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: check-upstream-release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RELEASE_PAT || github.token }}
+          fetch-depth: 0
+
+      - name: Determine latest upstream release
+        id: upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          LATEST=$(gh api repos/twentyhq/twenty/releases/latest --jq .tag_name)
+          if [ -z "$LATEST" ] || [ "$LATEST" = "null" ]; then
+            echo "Could not resolve upstream latest release" >&2
+            exit 1
+          fi
+          echo "Upstream latest: $LATEST"
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+
+      - name: Read current chart version
+        id: current
+        run: |
+          set -euo pipefail
+          CURRENT=$(yq '.version' Chart.yaml)
+          echo "Current chart version: $CURRENT"
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+
+      - name: Compare versions
+        id: compare
+        env:
+          LATEST: ${{ steps.upstream.outputs.latest }}
+          CURRENT: ${{ steps.current.outputs.current }}
+        run: |
+          set -euo pipefail
+          if [ "$LATEST" = "$CURRENT" ]; then
+            echo "Already up to date ($CURRENT)."
+            echo "bump=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Highest of the two, comparing without the leading "v".
+          NEWEST=$(printf '%s\n%s\n' "${LATEST#v}" "${CURRENT#v}" | sort -V | tail -n1)
+          if [ "v$NEWEST" != "$LATEST" ]; then
+            echo "Current ($CURRENT) is >= latest ($LATEST); nothing to do."
+            echo "bump=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "New upstream release detected: $CURRENT -> $LATEST"
+          echo "bump=true" >> "$GITHUB_OUTPUT"
+
+      - name: Bump chart, commit and tag
+        if: steps.compare.outputs.bump == 'true'
+        env:
+          LATEST: ${{ steps.upstream.outputs.latest }}
+        run: |
+          set -euo pipefail
+          yq -i ".version = \"${LATEST}\"" Chart.yaml
+          yq -i ".appVersion = \"${LATEST}\"" Chart.yaml
+          yq -i ".image.tag = \"${LATEST}\"" values.yaml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Chart.yaml values.yaml
+          git commit -m "chore: bump Twenty CRM to ${LATEST}"
+
+          # Abort if the tag somehow already exists.
+          if git rev-parse "refs/tags/${LATEST}" >/dev/null 2>&1; then
+            echo "Tag ${LATEST} already exists; pushing commit only."
+            git push origin HEAD:${GITHUB_REF_NAME}
+            exit 0
+          fi
+
+          git tag "${LATEST}"
+          git push origin HEAD:${GITHUB_REF_NAME}
+          git push origin "refs/tags/${LATEST}"
+          echo "Pushed bump commit and tag ${LATEST}."

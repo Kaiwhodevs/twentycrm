@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "twentycrm-chart.workerName" . }}
+  namespace: {{ include "twentycrm-chart.namespace" . }}
+  labels:
+    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  {{- with .Values.worker.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "twentycrm-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if not .Values.secret.existingSecret }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- end }}
+        {{- with .Values.commonAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.worker.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "twentycrm-chart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+        {{- with .Values.worker.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "twentycrm-chart.serviceAccountName" . }}
+      {{- include "twentycrm-chart.imagePullSecrets" . | nindent 6 }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        # Mirrors the compose: worker depends_on db (healthy) and server (healthy).
+        {{- if .Values.postgresql.enabled }}
+        - name: wait-for-db
+          image: {{ include "twentycrm-chart.busyboxImage" . }}
+          command:
+            - sh
+            - -c
+            - until nc -z {{ include "twentycrm-chart.dbName" . }} {{ .Values.postgresql.port }}; do echo "waiting for db"; sleep 2; done
+        {{- end }}
+        {{- if .Values.redis.enabled }}
+        - name: wait-for-redis
+          image: {{ include "twentycrm-chart.busyboxImage" . }}
+          command:
+            - sh
+            - -c
+            - until nc -z {{ include "twentycrm-chart.redisName" . }} {{ .Values.redis.service.port }}; do echo "waiting for redis"; sleep 2; done
+        {{- end }}
+        - name: wait-for-server
+          image: {{ include "twentycrm-chart.busyboxImage" . }}
+          command:
+            - sh
+            - -c
+            - until nc -z {{ include "twentycrm-chart.serverName" . }} {{ .Values.server.service.port }}; do echo "waiting for server"; sleep 2; done
+      containers:
+        - name: worker
+          image: {{ include "twentycrm-chart.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          command: ["yarn", "worker:prod"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "twentycrm-chart.configMapName" . }}
+            - secretRef:
+                name: {{ include "twentycrm-chart.secretName" . }}
+          env:
+            # Overrides: these jobs run on the server only (mirrors the compose).
+            - name: DISABLE_DB_MIGRATIONS
+              value: "true"
+            - name: DISABLE_CRON_JOBS_REGISTRATION
+              value: "true"
+          volumeMounts:
+            - name: server-local-data
+              mountPath: /app/packages/twenty-server/.local-storage
+            {{- with .Values.worker.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.worker.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: server-local-data
+          {{- if .Values.localStorage.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "twentycrm-chart.fullname" . }}-local-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- with .Values.worker.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.worker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.worker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.worker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,298 @@
+# Default values for twentycrm-chart.
+#
+# This chart mirrors the official Twenty docker-compose
+# (packages/twenty-docker/docker-compose.yml) — same services, same defaults,
+# same environment variables — packaged for Kubernetes. A default
+# `helm install` brings up a working instance out of the box, exactly like
+# `docker compose up`.
+#
+#   server  -> Deployment + Service   (twentycrm/twenty)
+#   worker  -> Deployment             (twentycrm/twenty, "yarn worker:prod")
+#   db      -> StatefulSet + Service  (postgres:16)
+#   redis   -> Deployment + Service   (redis)
+#
+# Non-sensitive env vars are rendered into a ConfigMap; sensitive ones into a
+# Secret (swap in your own via secret.existingSecret).
+
+# -----------------------------------------------------------------------------
+# Global parameters (shared with any future subcharts)
+# -----------------------------------------------------------------------------
+global:
+  # Overrides the image registry for all images (server, worker, db, redis).
+  imageRegistry: ""
+  # Pull secrets applied to every pod, e.g. [{ name: my-registry }].
+  imagePullSecrets: []
+  # Default StorageClass for all PersistentVolumeClaims.
+  storageClass: ""
+
+# -----------------------------------------------------------------------------
+# Common parameters
+# -----------------------------------------------------------------------------
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+# In-cluster DNS domain, used to build service hostnames.
+clusterDomain: cluster.local
+# Labels added to every object created by this chart.
+commonLabels: {}
+# Annotations added to every object created by this chart.
+commonAnnotations: {}
+# Array of extra raw manifests (strings or maps) to deploy with the release.
+extraDeploy: []
+
+# -- twentycrm/twenty image used by both the server and the worker.
+image:
+  registry: ""               # overrides global.imageRegistry for this image
+  repository: twentycrm/twenty
+  # Image tag. Tracks the upstream release (v-prefixed). Empty -> .Chart.AppVersion.
+  tag: "v2.8.0"
+  pullPolicy: IfNotPresent
+
+# -- Pull secrets for the images (merged with global.imagePullSecrets).
+imagePullSecrets: []
+
+# -- Lightweight image used by the dependency-wait init containers and the
+# `helm test` hook. Honors global.imageRegistry.
+busyboxImage:
+  registry: ""
+  repository: busybox
+  tag: "1.36"
+
+serviceAccount:
+  create: true
+  name: ""
+  automount: true
+  annotations: {}
+
+# Pod-level and container-level security contexts applied to server & worker.
+podSecurityContext: {}
+securityContext: {}
+
+# ---------------------------------------------------------------------------
+# server — the Twenty API/app container (compose service "server")
+# ---------------------------------------------------------------------------
+server:
+  replicaCount: 1
+  # Deployment update strategy. Recreate is the safe default because the server
+  # shares a ReadWriteOnce local-storage PVC (a RollingUpdate can deadlock on the
+  # single-attach volume). Switch to RollingUpdate with S3 storage / RWX volumes.
+  strategy:
+    type: Recreate
+  service:
+    type: ClusterIP
+    port: 3000
+    annotations: {}
+  # startupProbe gives the first boot time to run DB migrations before the
+  # liveness probe can kill the container.
+  startupProbe:
+    enabled: true
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+  # Probes (compose healthcheck: curl http://localhost:3000/healthz).
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 10
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 10
+  # Horizontal Pod Autoscaler for the server.
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 0
+  # PodDisruptionBudget for the server.
+  pdb:
+    enabled: false
+    minAvailable: 1
+    maxUnavailable: ""
+  resources: {}
+  podAnnotations: {}
+  podLabels: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ---------------------------------------------------------------------------
+# worker — background jobs (compose service "worker", "yarn worker:prod")
+# ---------------------------------------------------------------------------
+worker:
+  replicaCount: 1
+  # See server.strategy — the worker shares the same RWO local-storage PVC.
+  strategy:
+    type: Recreate
+  resources: {}
+  podAnnotations: {}
+  podLabels: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ---------------------------------------------------------------------------
+# Non-sensitive environment -> ConfigMap (server & worker, via envFrom)
+# ---------------------------------------------------------------------------
+config:
+  # SERVER_URL — public URL of this instance, e.g. https://crm.example.com.
+  serverUrl: ""
+  # NODE_PORT — port the server listens on.
+  nodePort: 3000
+  # Server-only migration/cron toggles. The worker always forces both to "true"
+  # (mirrors the compose, where these jobs run on the server only).
+  disableDbMigrations: ""
+  disableCronJobsRegistration: ""
+  # Attachment / file storage. Empty STORAGE_TYPE == local disk (compose default).
+  storage:
+    type: ""        # STORAGE_TYPE  ("" = local, "s3")
+    s3Region: ""    # STORAGE_S3_REGION
+    s3Name: ""      # STORAGE_S3_NAME
+    s3Endpoint: ""  # STORAGE_S3_ENDPOINT
+
+# -- Extra non-sensitive env vars merged into the ConfigMap. Use for the
+# optional integrations commented out in the upstream compose, e.g.:
+#   EMAIL_FROM_ADDRESS: contact@yourdomain.com
+#   EMAIL_DRIVER: smtp
+#   EMAIL_SMTP_HOST: smtp.gmail.com
+#   EMAIL_SMTP_PORT: "465"
+#   MESSAGING_PROVIDER_GMAIL_ENABLED: "true"
+#   AUTH_GOOGLE_CLIENT_ID: ...
+extraEnv: {}
+
+# ---------------------------------------------------------------------------
+# Sensitive environment -> Secret
+# ---------------------------------------------------------------------------
+secret:
+  # Use a pre-created Secret instead of generating one from the values below.
+  # The Secret MUST contain: APP_SECRET, ENCRYPTION_KEY, FALLBACK_ENCRYPTION_KEY,
+  # PG_DATABASE_PASSWORD, PG_DATABASE_URL.
+  existingSecret: ""
+
+  # APP_SECRET — signs tokens. Leave empty to auto-generate a random value on
+  # first install (persisted across upgrades). Override for a known value.
+  appSecret: ""
+  # ENCRYPTION_KEY — encrypts data at rest. Auto-generated when empty.
+  encryptionKey: ""
+  # FALLBACK_ENCRYPTION_KEY — previous key, used during key rotation.
+  fallbackEncryptionKey: ""
+
+  # -- Extra sensitive env vars merged into the Secret, e.g.:
+  #   EMAIL_SMTP_PASSWORD: ...
+  #   AUTH_GOOGLE_CLIENT_SECRET: ...
+  extraEnv: {}
+
+# ---------------------------------------------------------------------------
+# PostgreSQL — bundled "db" service (postgres:16)
+# ---------------------------------------------------------------------------
+postgresql:
+  enabled: true
+  image:
+    registry: ""
+    repository: postgres
+    tag: "16"
+    pullPolicy: IfNotPresent
+  auth:
+    username: postgres   # PG_DATABASE_USER / POSTGRES_USER
+    password: postgres   # PG_DATABASE_PASSWORD / POSTGRES_PASSWORD (-> Secret)
+    database: default    # PG_DATABASE_NAME / POSTGRES_DB
+  # Hostname override; defaults to the in-cluster db Service when empty.
+  host: ""
+  port: 5432
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+  resources: {}
+  podSecurityContext: {}
+  securityContext: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# External PostgreSQL: set postgresql.enabled=false and supply a full URL.
+externalDatabase:
+  url: ""   # postgres://user:password@host:5432/default
+
+# ---------------------------------------------------------------------------
+# Redis — bundled "redis" service
+# ---------------------------------------------------------------------------
+redis:
+  enabled: true
+  image:
+    registry: ""
+    repository: redis
+    tag: ""   # "" -> "latest" (mirrors `image: redis` in the compose)
+    pullPolicy: IfNotPresent
+  # compose: command ["--maxmemory-policy", "noeviction"]
+  maxmemoryPolicy: noeviction
+  service:
+    port: 6379
+  persistence:
+    enabled: false
+    size: 8Gi
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+  resources: {}
+  podSecurityContext: {}
+  securityContext: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# External Redis: set redis.enabled=false and supply a URL.
+externalRedis:
+  url: ""   # redis://host:6379
+
+# ---------------------------------------------------------------------------
+# Shared local storage (compose volume "server-local-data", mounted by both
+# server and worker). With STORAGE_TYPE=local both pods share this volume, so on
+# multi-node clusters use a ReadWriteMany storageClass — or switch to S3 storage
+# (config.storage.type=s3) and disable this.
+# ---------------------------------------------------------------------------
+localStorage:
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+
+# ---------------------------------------------------------------------------
+# Ingress for the server Service.
+# ---------------------------------------------------------------------------
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: crm.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: twenty-tls
+  #    hosts:
+  #      - crm.example.com

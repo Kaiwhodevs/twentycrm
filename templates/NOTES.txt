@@ -1,0 +1,32 @@
+Twenty CRM has been deployed as release "{{ .Release.Name }}" (chart {{ .Chart.Name }}-{{ .Chart.Version }}, app {{ .Chart.AppVersion }}).
+
+Components:
+  server : {{ include "twentycrm-chart.serverName" . }}  (Service on port {{ .Values.server.service.port }})
+  worker : {{ include "twentycrm-chart.workerName" . }}
+  db     : {{ if .Values.postgresql.enabled }}{{ include "twentycrm-chart.dbName" . }} (postgres:{{ .Values.postgresql.image.tag }}){{ else }}external ({{ .Values.externalDatabase.url | default "externalDatabase.url not set!" }}){{ end }}
+  redis  : {{ if .Values.redis.enabled }}{{ include "twentycrm-chart.redisName" . }}{{ else }}external ({{ .Values.externalRedis.url | default "externalRedis.url not set!" }}){{ end }}
+
+{{- if not .Values.secret.existingSecret }}
+{{- if not .Values.secret.appSecret }}
+
+NOTE: APP_SECRET and ENCRYPTION_KEY were auto-generated and stored in Secret
+"{{ include "twentycrm-chart.fullname" . }}-secret" (preserved across upgrades).
+For production, manage them yourself via secret.existingSecret.
+{{- end }}
+{{- end }}
+
+{{- if not .Values.config.serverUrl }}
+
+NOTE: config.serverUrl (SERVER_URL) is empty. Set it to your public URL,
+e.g. --set config.serverUrl=https://crm.example.com
+{{- end }}
+
+Access the app:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "twentycrm-chart.serverName" . }} {{ .Values.server.service.port }}:{{ .Values.server.service.port }}
+  # then open http://localhost:{{ .Values.server.service.port }}
+{{- end }}

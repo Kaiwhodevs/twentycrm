@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "twentycrm-chart.fullname" . }}-test-connection
+  namespace: {{ include "twentycrm-chart.namespace" . }}
+  labels:
+    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: test
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    {{- with .Values.commonAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  restartPolicy: Never
+  {{- include "twentycrm-chart.imagePullSecrets" . | nindent 2 }}
+  containers:
+    - name: test
+      image: {{ include "twentycrm-chart.busyboxImage" . }}
+      command:
+        - sh
+        - -c
+        - |
+          echo "Probing {{ include "twentycrm-chart.serverName" . }}:{{ .Values.server.service.port }}{{ .Values.server.livenessProbe.httpGet.path }}"
+          wget -q -S -O /dev/null "http://{{ include "twentycrm-chart.serverName" . }}:{{ .Values.server.service.port }}{{ .Values.server.livenessProbe.httpGet.path }}"
