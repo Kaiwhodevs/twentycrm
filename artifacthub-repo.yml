@@ -2,10 +2,9 @@
 # Published to GHCR as oci://ghcr.io/kaiwhodevs/twentycrm-chart:artifacthub.io
 # by .github/workflows/publish-artifacthub-metadata.yml.
 #
-# repositoryID enables the "Verified Publisher" badge. Find it in the Artifact Hub
-# Control Panel -> Repositories tab -> the repository card shows an "ID" (a UUID).
-# Paste it below, then push to main (the workflow republishes the metadata).
-repositoryID: ""
+# repositoryID enables the "Verified Publisher" badge: Artifact Hub matches this
+# against the repository you registered (Control Panel -> Repositories -> ID).
+repositoryID: c35bcc34-b770-4459-a979-1af78ac95c1f
 
 # Optional: claim repository ownership. The email must match the one on your
 # Artifact Hub account.
