@@ -1,7 +1,9 @@
 name: Release chart
 
 # Triggered by a v-prefixed tag (pushed by check-upstream-release.yml or by hand).
-# Packages the chart at that version and pushes it to GHCR as an OCI artifact:
+# Packages the chart at that version, pushes it to GHCR as an OCI artifact, and
+# signs it with cosign (keyless, via GitHub OIDC) so Artifact Hub shows the
+# "Signed" badge:
 #   oci://ghcr.io/kaiwhodevs/twentycrm-chart:<tag>
 
 on:
@@ -12,6 +14,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write   # required for cosign keyless (OIDC) signing
 
 jobs:
   release:
@@ -43,15 +46,38 @@ jobs:
       - name: Package
         run: helm package . --destination dist
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
       - name: Log in to GHCR
         run: |
+          # helm uses its own registry config; cosign reads the docker config —
+          # log in to both so the push and the signature both authenticate.
           echo "${{ secrets.GITHUB_TOKEN }}" \
             | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
 
       - name: Push to GHCR
+        id: push
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          helm push "dist/twentycrm-chart-${VERSION}.tgz" "oci://ghcr.io/kaiwhodevs"
-          echo "Pushed oci://ghcr.io/kaiwhodevs/twentycrm-chart:${VERSION}"
+          out=$(helm push "dist/twentycrm-chart-${VERSION}.tgz" "oci://ghcr.io/kaiwhodevs" 2>&1)
+          echo "$out"
+          digest=$(echo "$out" | awk '/Digest:/ {print $2}')
+          if [ -z "$digest" ]; then
+            echo "Could not parse pushed digest" >&2
+            exit 1
+          fi
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "Pushed oci://ghcr.io/kaiwhodevs/twentycrm-chart:${VERSION} ($digest)"
+
+      - name: Sign with cosign (keyless)
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          set -euo pipefail
+          cosign sign --yes "ghcr.io/kaiwhodevs/twentycrm-chart@${DIGEST}"
+          echo "Signed ghcr.io/kaiwhodevs/twentycrm-chart@${DIGEST}"
