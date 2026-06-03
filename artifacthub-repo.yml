@@ -11,3 +11,10 @@ repositoryID: c35bcc34-b770-4459-a979-1af78ac95c1f
 owners:
   - name: Kaiwhodevs
     email: kai@cod3labs.com
+
+# Exclude versions from the Artifact Hub index. v2.8.0 referenced a Twenty image
+# tag that was never published to Docker Hub, so it is intentionally dropped.
+# (version is a regex; matches the stored version with or without the leading v.)
+ignore:
+  - name: twentycrm-chart
+    version: '^v?2\.8\.0$'
