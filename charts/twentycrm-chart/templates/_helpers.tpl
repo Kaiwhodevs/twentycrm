@@ -222,6 +222,8 @@ Sensitive: lives in the Secret.
 {{- define "twentycrm-chart.databaseUrl" -}}
 {{- if .Values.externalDatabase.url }}
 {{- .Values.externalDatabase.url }}
+{{- else if .Values.postgresql.auth.secretRef }}
+{{- fail "postgresql.auth.secretRef is set, so the chart cannot read the password to assemble PG_DATABASE_URL. Provide the full URL yourself via secret.secretRef (the pgDatabaseUrl key) or externalDatabase.url." }}
 {{- else }}
 {{- printf "postgres://%s:%s@%s:%v/%s" .Values.postgresql.auth.username .Values.postgresql.auth.password (include "twentycrm-chart.dbHost" .) (.Values.postgresql.port | int) .Values.postgresql.auth.database }}
 {{- end }}
