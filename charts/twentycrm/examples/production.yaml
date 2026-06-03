@@ -53,12 +53,29 @@ server:
   pdb:
     enabled: true
     minAvailable: 1
+  # Sensitive integration credentials go straight into the container via
+  # secretKeyRef (never into the ConfigMap). Create the Secret first:
+  #   kubectl create secret generic twenty-smtp --from-literal=smtp_password='...'
+  # extraEnv:
+  #   - name: EMAIL_SMTP_PASSWORD
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: twenty-smtp
+  #         key: smtp_password
 
 worker:
   replicaCount: 1
   resources:
     requests: { cpu: 250m, memory: 512Mi }
     limits:   { cpu: "1",  memory: 1Gi }
+  # Apply the same extra env to the worker (it runs background jobs that may
+  # also need SMTP/OAuth credentials):
+  # extraEnv:
+  #   - name: EMAIL_SMTP_PASSWORD
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: twenty-smtp
+  #         key: smtp_password
 
 redis:
   persistence:

@@ -44,13 +44,15 @@
         "replicaCount": { "type": "integer", "minimum": 0 },
         "service": { "type": "object" },
         "autoscaling": { "type": "object" },
-        "pdb": { "type": "object" }
+        "pdb": { "type": "object" },
+        "extraEnv": { "type": "array" }
       }
     },
     "worker": {
       "type": "object",
       "properties": {
-        "replicaCount": { "type": "integer", "minimum": 0 }
+        "replicaCount": { "type": "integer", "minimum": 0 },
+        "extraEnv": { "type": "array" }
       }
     },
     "config": {

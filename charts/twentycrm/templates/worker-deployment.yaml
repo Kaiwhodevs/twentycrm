@@ -94,6 +94,10 @@ spec:
               value: "true"
             - name: DISABLE_CRON_JOBS_REGISTRATION
               value: "true"
+            {{- with .Values.worker.extraEnv }}
+            # User-supplied extra env (plain values or valueFrom).
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           volumeMounts:
             - name: server-local-data
               mountPath: /app/packages/twenty-server/.local-storage

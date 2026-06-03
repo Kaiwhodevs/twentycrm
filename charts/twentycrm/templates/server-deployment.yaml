@@ -87,6 +87,10 @@ spec:
             # App secrets via secretKeyRef + PG_DATABASE_URL (from secret.secretRef,
             # or assembled at runtime). See helper twentycrm.serverSecretEnv.
             {{- include "twentycrm.serverSecretEnv" . | nindent 12 }}
+            {{- with .Values.server.extraEnv }}
+            # User-supplied extra env (plain values or valueFrom).
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           {{- if .Values.server.startupProbe.enabled }}
           startupProbe:
             {{- omit .Values.server.startupProbe "enabled" | toYaml | nindent 12 }}

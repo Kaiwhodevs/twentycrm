@@ -122,6 +122,20 @@ server:
     minAvailable: 1
     maxUnavailable: ""
   resources: {}
+  # Extra env vars injected directly into the server container. Supports plain
+  # values and valueFrom (secretKeyRef, configMapKeyRef, ...). Use for sensitive
+  # integration credentials that shouldn't go in the ConfigMap, e.g.:
+  # - name: EMAIL_SMTP_PASSWORD
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: my-smtp-secret
+  #       key: smtp_password
+  # - name: AUTH_GOOGLE_CLIENT_SECRET
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: my-oauth-secret
+  #       key: google_client_secret
+  extraEnv: []
   podAnnotations: {}
   podLabels: {}
   extraVolumes: []
@@ -139,6 +153,8 @@ worker:
   strategy:
     type: Recreate
   resources: {}
+  # Same as server.extraEnv - injected directly into the worker container.
+  extraEnv: []
   podAnnotations: {}
   podLabels: {}
   extraVolumes: []

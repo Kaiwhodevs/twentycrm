@@ -190,8 +190,8 @@ externalRedis:
 
 ### Email, OAuth & other integrations
 
-Non-sensitive integration vars from the upstream compose go into the ConfigMap via
-the top-level `extraEnv`:
+**Non-sensitive** integration vars go into the ConfigMap via the top-level
+`extraEnv`:
 
 ```yaml
 extraEnv:                        # -> ConfigMap
@@ -201,11 +201,28 @@ extraEnv:                        # -> ConfigMap
   EMAIL_SMTP_PORT: "465"
 ```
 
-The secret blocks are fixed-field (app secrets + DB password) to mirror the
-Supabase chart, so sensitive integration credentials (e.g. `EMAIL_SMTP_PASSWORD`,
-`AUTH_GOOGLE_CLIENT_SECRET`) are not injected by the chart - manage those with your
-own mechanism (e.g. an `extraDeploy` Secret + a sidecar/env reference), or open an
-issue if you'd like first-class fields added.
+**Sensitive** credentials (e.g. `EMAIL_SMTP_PASSWORD`, `AUTH_GOOGLE_CLIENT_SECRET`)
+go into the container directly via `server.extraEnv` / `worker.extraEnv` - a raw
+env list that supports plain values and `valueFrom` (`secretKeyRef`,
+`configMapKeyRef`, …), so they're sourced from a Secret you manage and never
+touch the ConfigMap. Apply them to **both** the server and worker:
+
+```yaml
+server:
+  extraEnv:
+    - name: EMAIL_SMTP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: my-smtp-secret
+          key: smtp_password
+worker:
+  extraEnv:
+    - name: EMAIL_SMTP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: my-smtp-secret
+          key: smtp_password
+```
 
 ### File storage
 
@@ -297,6 +314,7 @@ helm uninstall twenty
 | `server.autoscaling.enabled` | `false` | HorizontalPodAutoscaler for the server |
 | `server.pdb.enabled` | `false` | PodDisruptionBudget for the server |
 | `server.resources` / `worker.resources` | `{}` | Resource requests/limits |
+| `server.extraEnv` / `worker.extraEnv` | `[]` | Extra container env (raw list; supports `valueFrom` for `secretKeyRef`/`configMapKeyRef`) |
 | `server.extraVolumes` / `.extraVolumeMounts` | `[]` | Extra volumes/mounts (also on `worker`) |
 | `worker.replicaCount` | `1` | Worker replicas |
 | `postgresql.enabled` | `true` | Deploy the bundled PostgreSQL |
