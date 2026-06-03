@@ -132,13 +132,6 @@ Server / worker image (image.tag falls back to .Chart.AppVersion).
 {{- end }}
 
 {{/*
-Lightweight busybox image for init-container waits and the test hook.
-*/}}
-{{- define "twentycrm-chart.busyboxImage" -}}
-{{- include "twentycrm-chart.imageRef" (dict "image" .Values.busyboxImage "tag" .Values.busyboxImage.tag "global" .Values.global) -}}
-{{- end }}
-
-{{/*
 Merged image pull secrets (global + chart-level).
 */}}
 {{- define "twentycrm-chart.imagePullSecrets" -}}

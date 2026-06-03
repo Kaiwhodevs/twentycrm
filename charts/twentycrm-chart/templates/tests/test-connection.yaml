@@ -17,10 +17,13 @@ spec:
   {{- include "twentycrm-chart.imagePullSecrets" . | nindent 2 }}
   containers:
     - name: test
-      image: {{ include "twentycrm-chart.busyboxImage" . }}
+      # Uses the Twenty image's curl, mirroring the compose healthcheck.
+      image: {{ include "twentycrm-chart.image" . }}
+      imagePullPolicy: {{ .Values.image.pullPolicy }}
       command:
         - sh
         - -c
         - |
-          echo "Probing {{ include "twentycrm-chart.serverName" . }}:{{ .Values.server.service.port }}{{ .Values.server.livenessProbe.httpGet.path }}"
-          wget -q -S -O /dev/null "http://{{ include "twentycrm-chart.serverName" . }}:{{ .Values.server.service.port }}{{ .Values.server.livenessProbe.httpGet.path }}"
+          url="http://{{ include "twentycrm-chart.serverName" . }}:{{ .Values.server.service.port }}{{ .Values.server.livenessProbe.httpGet.path }}"
+          echo "Probing $url"
+          curl --fail --show-error --silent "$url"

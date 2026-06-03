@@ -232,7 +232,6 @@ helm uninstall twenty
 | `serviceAccount.create` / `.name` / `.automount` | `true` / `""` / `true` | ServiceAccount settings |
 | `image.registry` / `.repository` | `""` / `twentycrm/twenty` | Server/worker image |
 | `image.tag` | `v2.8.3` | Image tag (falls back to `.Chart.AppVersion`) |
-| `busyboxImage.*` | `busybox:1.36` | Image for wait init-containers & `helm test` |
 | `config.serverUrl` | `""` | `SERVER_URL` - public URL of the instance |
 | `config.nodePort` | `3000` | `NODE_PORT` |
 | `config.disableDbMigrations` | `""` | `DISABLE_DB_MIGRATIONS` (server) |

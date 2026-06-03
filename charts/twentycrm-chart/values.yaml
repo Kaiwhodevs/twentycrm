@@ -51,13 +51,6 @@ image:
 # -- Pull secrets for the images (merged with global.imagePullSecrets).
 imagePullSecrets: []
 
-# -- Lightweight image used by the dependency-wait init containers and the
-# `helm test` hook. Honors global.imageRegistry.
-busyboxImage:
-  registry: ""
-  repository: busybox
-  tag: "1.36"
-
 serviceAccount:
   create: true
   name: ""

@@ -50,26 +50,29 @@ spec:
         # Mirrors the compose: worker depends_on db (healthy) and server (healthy).
         {{- if .Values.postgresql.enabled }}
         - name: wait-for-db
-          image: {{ include "twentycrm-chart.busyboxImage" . }}
+          image: {{ include "twentycrm-chart.imageRef" (dict "image" .Values.postgresql.image "tag" .Values.postgresql.image.tag "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.postgresql.image.pullPolicy }}
           command:
             - sh
             - -c
-            - until nc -z {{ include "twentycrm-chart.dbName" . }} {{ .Values.postgresql.port }}; do echo "waiting for db"; sleep 2; done
+            - until pg_isready -h {{ include "twentycrm-chart.dbName" . }} -p {{ .Values.postgresql.port }}; do echo "waiting for db"; sleep 2; done
         {{- end }}
         {{- if .Values.redis.enabled }}
         - name: wait-for-redis
-          image: {{ include "twentycrm-chart.busyboxImage" . }}
+          image: {{ include "twentycrm-chart.imageRef" (dict "image" .Values.redis.image "tag" (.Values.redis.image.tag | default "latest") "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
           command:
             - sh
             - -c
-            - until nc -z {{ include "twentycrm-chart.redisName" . }} {{ .Values.redis.service.port }}; do echo "waiting for redis"; sleep 2; done
+            - until redis-cli -h {{ include "twentycrm-chart.redisName" . }} -p {{ .Values.redis.service.port }} ping >/dev/null 2>&1; do echo "waiting for redis"; sleep 2; done
         {{- end }}
         - name: wait-for-server
-          image: {{ include "twentycrm-chart.busyboxImage" . }}
+          image: {{ include "twentycrm-chart.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - sh
             - -c
-            - until nc -z {{ include "twentycrm-chart.serverName" . }} {{ .Values.server.service.port }}; do echo "waiting for server"; sleep 2; done
+            - until curl -fsS http://{{ include "twentycrm-chart.serverName" . }}:{{ .Values.server.service.port }}{{ .Values.server.livenessProbe.httpGet.path }} >/dev/null 2>&1; do echo "waiting for server"; sleep 2; done
       containers:
         - name: worker
           image: {{ include "twentycrm-chart.image" . }}
