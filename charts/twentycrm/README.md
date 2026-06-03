@@ -375,6 +375,56 @@ git tag v2.8.3 && git push origin v2.8.3
 
 ---
 
+## Troubleshooting
+
+### `STORAGE_TYPE must be one of the following values`
+
+Twenty v2.8+ requires `STORAGE_TYPE` to be set to a valid value. The chart defaults
+`config.storage.type` to `local`, so this is handled out of the box. If you
+overrode it to an empty string, set it back to `local` (or `s3`):
+
+```yaml
+config:
+  storage:
+    type: local
+```
+
+### `EACCES: permission denied` on `.local-storage` (e.g. when a user signs up)
+
+The Twenty image runs as uid/gid **1000** (the `node` user), but Kubernetes mounts
+PVCs owned by root by default, so Twenty can't write attachments to the shared
+`.local-storage` volume. The chart sets `podSecurityContext.fsGroup: 1000` by
+default to fix volume ownership on mount. If you cleared `podSecurityContext`,
+restore it:
+
+```yaml
+podSecurityContext:
+  fsGroup: 1000
+```
+
+(Or switch to S3 storage with `config.storage.type=s3`, which needs no shared volume.)
+
+### Fresh install: missing core tables / empty `core` schema
+
+If an earlier install failed **after** Postgres created an empty `core` schema but
+**before** Twenty seeded it, the image entrypoint sees the schema already exists and
+**skips `database:init:prod`** - leaving all core tables missing, so the app starts
+but is broken. Reset the schema and restart the server:
+
+```bash
+# 1. drop the half-initialized schema (database name defaults to "default")
+kubectl exec -it <release>-twentycrm-db-0 -- \
+  psql -U postgres -d default -c 'DROP SCHEMA core CASCADE;'
+
+# 2. restart the server so the entrypoint re-runs database:init:prod
+kubectl rollout restart deployment/<release>-twentycrm-server
+```
+
+This only affects clusters left in a partial state by a previously failed install;
+a clean first install initializes correctly.
+
+---
+
 ## License
 
 This chart (the packaging) is licensed under

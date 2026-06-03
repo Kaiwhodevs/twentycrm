@@ -58,7 +58,11 @@ serviceAccount:
   annotations: {}
 
 # Pod-level and container-level security contexts applied to server & worker.
-podSecurityContext: {}
+# fsGroup 1000 matches the Twenty image's node user (uid/gid 1000) so the
+# .local-storage PVC is group-writable on mount - without it, Kubernetes mounts
+# the volume as root and Twenty gets "EACCES: permission denied" on file upload.
+podSecurityContext:
+  fsGroup: 1000
 securityContext: {}
 
 # ---------------------------------------------------------------------------
@@ -155,9 +159,10 @@ config:
   # (mirrors the compose, where these jobs run on the server only).
   disableDbMigrations: ""
   disableCronJobsRegistration: ""
-  # Attachment / file storage. Empty STORAGE_TYPE == local disk (compose default).
+  # Attachment / file storage. Twenty REQUIRES STORAGE_TYPE to be set to a valid
+  # value ("local" or "s3"); an empty string fails config validation on startup.
   storage:
-    type: ""        # STORAGE_TYPE  ("" = local, "s3")
+    type: "local"   # STORAGE_TYPE  ("local" or "s3")
     s3Region: ""    # STORAGE_S3_REGION
     s3Name: ""      # STORAGE_S3_NAME
     s3Endpoint: ""  # STORAGE_S3_ENDPOINT

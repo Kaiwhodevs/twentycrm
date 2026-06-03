@@ -3,6 +3,9 @@
 # smoke-tested in an ephemeral cluster.
 config:
   serverUrl: http://localhost:3000
+  # Explicit (also the default) - Twenty requires STORAGE_TYPE to be a valid value.
+  storage:
+    type: local
 
 secret:
   appSecret: ci-app-secret-do-not-use-in-prod
