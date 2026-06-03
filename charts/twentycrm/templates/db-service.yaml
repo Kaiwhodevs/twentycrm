@@ -1,11 +1,11 @@
-{{- if eq (include "twentycrm-chart.bundledDb" .) "true" }}
+{{- if eq (include "twentycrm.bundledDb" .) "true" }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "twentycrm-chart.dbName" . }}
-  namespace: {{ include "twentycrm-chart.namespace" . }}
+  name: {{ include "twentycrm.dbName" . }}
+  namespace: {{ include "twentycrm.namespace" . }}
   labels:
-    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    {{- include "twentycrm.labels" . | nindent 4 }}
     app.kubernetes.io/component: db
   {{- with .Values.commonAnnotations }}
   annotations:
@@ -20,6 +20,6 @@ spec:
       targetPort: postgres
       protocol: TCP
   selector:
-    {{- include "twentycrm-chart.selectorLabels" . | nindent 4 }}
+    {{- include "twentycrm.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: db
 {{- end }}

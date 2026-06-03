@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "twentycrm-chart.configMapName" . }}
-  namespace: {{ include "twentycrm-chart.namespace" . }}
+  name: {{ include "twentycrm.configMapName" . }}
+  namespace: {{ include "twentycrm.namespace" . }}
   labels:
-    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    {{- include "twentycrm.labels" . | nindent 4 }}
   {{- with .Values.commonAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -13,14 +13,14 @@ data:
   # --- server / worker shared, non-sensitive env (mirrors the compose) ---
   NODE_PORT: {{ .Values.config.nodePort | quote }}
   SERVER_URL: {{ .Values.config.serverUrl | quote }}
-  REDIS_URL: {{ include "twentycrm-chart.redisUrl" . | quote }}
+  REDIS_URL: {{ include "twentycrm.redisUrl" . | quote }}
   DISABLE_DB_MIGRATIONS: {{ .Values.config.disableDbMigrations | quote }}
   DISABLE_CRON_JOBS_REGISTRATION: {{ .Values.config.disableCronJobsRegistration | quote }}
   STORAGE_TYPE: {{ .Values.config.storage.type | quote }}
   STORAGE_S3_REGION: {{ .Values.config.storage.s3Region | quote }}
   STORAGE_S3_NAME: {{ .Values.config.storage.s3Name | quote }}
   STORAGE_S3_ENDPOINT: {{ .Values.config.storage.s3Endpoint | quote }}
-  {{- if eq (include "twentycrm-chart.bundledDb" .) "true" }}
+  {{- if eq (include "twentycrm.bundledDb" .) "true" }}
   # --- bundled postgres container, non-sensitive env ---
   POSTGRES_USER: {{ .Values.postgresql.auth.username | quote }}
   POSTGRES_DB: {{ .Values.postgresql.auth.database | quote }}

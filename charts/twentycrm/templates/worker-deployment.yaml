@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "twentycrm-chart.workerName" . }}
-  namespace: {{ include "twentycrm-chart.namespace" . }}
+  name: {{ include "twentycrm.workerName" . }}
+  namespace: {{ include "twentycrm.namespace" . }}
   labels:
-    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    {{- include "twentycrm.labels" . | nindent 4 }}
     app.kubernetes.io/component: worker
   {{- with .Values.commonAnnotations }}
   annotations:
@@ -18,13 +18,13 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "twentycrm-chart.selectorLabels" . | nindent 6 }}
+      {{- include "twentycrm.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: worker
   template:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        {{- if include "twentycrm-chart.generatesSecret" . }}
+        {{- if include "twentycrm.generatesSecret" . }}
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
         {{- end }}
         {{- with .Values.commonAnnotations }}
@@ -34,48 +34,48 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "twentycrm-chart.selectorLabels" . | nindent 8 }}
+        {{- include "twentycrm.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: worker
         {{- with .Values.worker.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: {{ include "twentycrm-chart.serviceAccountName" . }}
-      {{- include "twentycrm-chart.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ include "twentycrm.serviceAccountName" . }}
+      {{- include "twentycrm.imagePullSecrets" . | nindent 6 }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       initContainers:
         # Mirrors the compose: worker depends_on db (healthy) and server (healthy).
-        {{- if eq (include "twentycrm-chart.bundledDb" .) "true" }}
+        {{- if eq (include "twentycrm.bundledDb" .) "true" }}
         - name: wait-for-db
-          image: {{ include "twentycrm-chart.imageRef" (dict "image" .Values.postgresql.image "tag" .Values.postgresql.image.tag "global" .Values.global) }}
+          image: {{ include "twentycrm.imageRef" (dict "image" .Values.postgresql.image "tag" .Values.postgresql.image.tag "global" .Values.global) }}
           imagePullPolicy: {{ .Values.postgresql.image.pullPolicy }}
           command:
             - sh
             - -c
-            - until pg_isready -h {{ include "twentycrm-chart.dbName" . }} -p {{ .Values.postgresql.port }}; do echo "waiting for db"; sleep 2; done
+            - until pg_isready -h {{ include "twentycrm.dbName" . }} -p {{ .Values.postgresql.port }}; do echo "waiting for db"; sleep 2; done
         {{- end }}
         {{- if .Values.redis.enabled }}
         - name: wait-for-redis
-          image: {{ include "twentycrm-chart.imageRef" (dict "image" .Values.redis.image "tag" (.Values.redis.image.tag | default "latest") "global" .Values.global) }}
+          image: {{ include "twentycrm.imageRef" (dict "image" .Values.redis.image "tag" (.Values.redis.image.tag | default "latest") "global" .Values.global) }}
           imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
           command:
             - sh
             - -c
-            - until redis-cli -h {{ include "twentycrm-chart.redisName" . }} -p {{ .Values.redis.service.port }} ping >/dev/null 2>&1; do echo "waiting for redis"; sleep 2; done
+            - until redis-cli -h {{ include "twentycrm.redisName" . }} -p {{ .Values.redis.service.port }} ping >/dev/null 2>&1; do echo "waiting for redis"; sleep 2; done
         {{- end }}
         - name: wait-for-server
-          image: {{ include "twentycrm-chart.image" . }}
+          image: {{ include "twentycrm.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - sh
             - -c
-            - until curl -fsS http://{{ include "twentycrm-chart.serverName" . }}:{{ .Values.server.service.port }}{{ .Values.server.livenessProbe.httpGet.path }} >/dev/null 2>&1; do echo "waiting for server"; sleep 2; done
+            - until curl -fsS http://{{ include "twentycrm.serverName" . }}:{{ .Values.server.service.port }}{{ .Values.server.livenessProbe.httpGet.path }} >/dev/null 2>&1; do echo "waiting for server"; sleep 2; done
       containers:
         - name: worker
-          image: {{ include "twentycrm-chart.image" . }}
+          image: {{ include "twentycrm.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           {{- with .Values.securityContext }}
           securityContext:
@@ -84,11 +84,11 @@ spec:
           command: ["yarn", "worker:prod"]
           envFrom:
             - configMapRef:
-                name: {{ include "twentycrm-chart.configMapName" . }}
+                name: {{ include "twentycrm.configMapName" . }}
           env:
             # App secrets via secretKeyRef + PG_DATABASE_URL (from secret.secretRef,
-            # or assembled at runtime). See helper twentycrm-chart.serverSecretEnv.
-            {{- include "twentycrm-chart.serverSecretEnv" . | nindent 12 }}
+            # or assembled at runtime). See helper twentycrm.serverSecretEnv.
+            {{- include "twentycrm.serverSecretEnv" . | nindent 12 }}
             # Overrides: these jobs run on the server only (mirrors the compose).
             - name: DISABLE_DB_MIGRATIONS
               value: "true"
@@ -108,7 +108,7 @@ spec:
         - name: server-local-data
           {{- if .Values.localStorage.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ include "twentycrm-chart.fullname" . }}-local-data
+            claimName: {{ include "twentycrm.fullname" . }}-local-data
           {{- else }}
           emptyDir: {}
           {{- end }}
@@ -134,7 +134,7 @@ spec:
             - topologyKey: kubernetes.io/hostname
               labelSelector:
                 matchLabels:
-                  {{- include "twentycrm-chart.selectorLabels" . | nindent 18 }}
+                  {{- include "twentycrm.selectorLabels" . | nindent 18 }}
                   app.kubernetes.io/component: server
       {{- end }}
       {{- with .Values.worker.tolerations }}

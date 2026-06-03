@@ -1,8 +1,8 @@
 # Twenty CRM - Helm chart
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/twentycrm)](https://artifacthub.io/packages/search?repo=twentycrm)
-[![Release](https://img.shields.io/github/v/tag/Kaiwhodevs/twentycrm-chart?label=chart&sort=semver)](https://github.com/Kaiwhodevs/twentycrm-chart/tags)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/Kaiwhodevs/twentycrm-chart/blob/main/LICENSE)
+[![Release](https://img.shields.io/github/v/tag/Kaiwhodevs/twentycrm?label=chart&sort=semver)](https://github.com/Kaiwhodevs/twentycrm/tags)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/Kaiwhodevs/twentycrm/blob/main/LICENSE)
 [![Signed with cosign](https://img.shields.io/badge/signed-cosign-2f7de1.svg)](#security--supply-chain)
 
 A production-ready Helm chart for [**Twenty CRM**](https://github.com/twentyhq/twenty),
@@ -14,8 +14,8 @@ exactly - same services, same defaults, same environment variables - so a defaul
 install behaves like `docker compose up`, just on Kubernetes.
 
 ```text
-Registry:  oci://ghcr.io/kaiwhodevs/twentycrm-chart
-Artifact Hub:  https://artifacthub.io/packages/helm/twentycrm/twentycrm-chart
+Registry:  oci://ghcr.io/kaiwhodevs/twentycrm
+Artifact Hub:  https://artifacthub.io/packages/helm/twentycrm/twentycrm
 ```
 
 ---
@@ -78,7 +78,7 @@ Install straight from GHCR - no `helm repo add` needed. `APP_SECRET` and
 so a default install just works:
 
 ```bash
-helm install twenty oci://ghcr.io/kaiwhodevs/twentycrm-chart \
+helm install twenty oci://ghcr.io/kaiwhodevs/twentycrm \
   --version v2.8.3 \
   --set config.serverUrl=https://crm.example.com
 ```
@@ -87,7 +87,7 @@ Verify the deployment and open the app:
 
 ```bash
 helm test twenty                                              # probes /healthz
-kubectl port-forward svc/twenty-twentycrm-chart-server 3000:3000
+kubectl port-forward svc/twenty-twentycrm-server 3000:3000
 # open http://localhost:3000
 ```
 
@@ -127,7 +127,7 @@ kubectl create secret generic twenty-secret \
   --from-literal=app_secret="$(openssl rand -base64 32)" \
   --from-literal=encryption_key="$(openssl rand -base64 32)" \
   --from-literal=fallback_encryption_key="" \
-  --from-literal=database_url="postgres://postgres:THE_SAME_DB_PASSWORD@twenty-twentycrm-chart-db:5432/default"
+  --from-literal=database_url="postgres://postgres:THE_SAME_DB_PASSWORD@twenty-twentycrm-db:5432/default"
 ```
 
 **2. Point the chart at them** - this values file contains no secrets at all
@@ -148,7 +148,7 @@ secret:
 ```
 
 > The password inside `database_url` must equal the `database_password` in the DB
-> Secret, and the host should be `<release>-twentycrm-chart-db` (or your external
+> Secret, and the host should be `<release>-twentycrm-db` (or your external
 > database). The two `secretRef`s may point at the same Secret - just put all keys
 > in one.
 
@@ -157,7 +157,7 @@ autoscaling, PDB) using this pattern is in
 [`examples/production.yaml`](examples/production.yaml):
 
 ```bash
-helm install twenty oci://ghcr.io/kaiwhodevs/twentycrm-chart \
+helm install twenty oci://ghcr.io/kaiwhodevs/twentycrm \
   --version v2.8.3 -f examples/production.yaml
 ```
 
@@ -235,8 +235,8 @@ The chart version equals the Twenty release it deploys, so upgrading the chart
 upgrades Twenty.
 
 ```bash
-helm show chart oci://ghcr.io/kaiwhodevs/twentycrm-chart --version v2.8.3   # inspect
-helm upgrade twenty oci://ghcr.io/kaiwhodevs/twentycrm-chart \
+helm show chart oci://ghcr.io/kaiwhodevs/twentycrm --version v2.8.3   # inspect
+helm upgrade twenty oci://ghcr.io/kaiwhodevs/twentycrm \
   --version v2.8.3 -f examples/production.yaml
 ```
 
@@ -329,8 +329,8 @@ This chart earns Artifact Hub's quality badges:
 Verify a release before installing:
 
 ```bash
-cosign verify ghcr.io/kaiwhodevs/twentycrm-chart:v2.8.3 \
-  --certificate-identity-regexp '^https://github.com/Kaiwhodevs/twentycrm-chart/.github/workflows/release-chart.yml@.*' \
+cosign verify ghcr.io/kaiwhodevs/twentycrm:v2.8.3 \
+  --certificate-identity-regexp '^https://github.com/Kaiwhodevs/twentycrm/.github/workflows/release-chart.yml@.*' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
@@ -378,6 +378,6 @@ git tag v2.8.3 && git push origin v2.8.3
 ## License
 
 This chart (the packaging) is licensed under
-[**Apache-2.0**](https://github.com/Kaiwhodevs/twentycrm-chart/blob/main/LICENSE).
+[**Apache-2.0**](https://github.com/Kaiwhodevs/twentycrm/blob/main/LICENSE).
 Twenty CRM itself is developed by [twentyhq/twenty](https://github.com/twentyhq/twenty)
 under its own license; this chart only references the upstream container images.

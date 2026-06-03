@@ -1,10 +1,10 @@
 Twenty CRM has been deployed as release "{{ .Release.Name }}" (chart {{ .Chart.Name }}-{{ .Chart.Version }}, app {{ .Chart.AppVersion }}).
 
 Components:
-  server : {{ include "twentycrm-chart.serverName" . }}  (Service on port {{ .Values.server.service.port }})
-  worker : {{ include "twentycrm-chart.workerName" . }}
-  db     : {{ if .Values.externalDatabase.enabled }}external ({{ .Values.externalDatabase.host }}:{{ .Values.externalDatabase.port }}/{{ .Values.externalDatabase.database }}){{ else if .Values.postgresql.enabled }}{{ include "twentycrm-chart.dbName" . }} (postgres:{{ .Values.postgresql.image.tag }}){{ else }}provided via secret.secretRef (databaseUrl){{ end }}
-  redis  : {{ if .Values.redis.enabled }}{{ include "twentycrm-chart.redisName" . }}{{ else }}external ({{ .Values.externalRedis.url | default "externalRedis.url not set!" }}){{ end }}
+  server : {{ include "twentycrm.serverName" . }}  (Service on port {{ .Values.server.service.port }})
+  worker : {{ include "twentycrm.workerName" . }}
+  db     : {{ if .Values.externalDatabase.enabled }}external ({{ .Values.externalDatabase.host }}:{{ .Values.externalDatabase.port }}/{{ .Values.externalDatabase.database }}){{ else if .Values.postgresql.enabled }}{{ include "twentycrm.dbName" . }} (postgres:{{ .Values.postgresql.image.tag }}){{ else }}provided via secret.secretRef (databaseUrl){{ end }}
+  redis  : {{ if .Values.redis.enabled }}{{ include "twentycrm.redisName" . }}{{ else }}external ({{ .Values.externalRedis.url | default "externalRedis.url not set!" }}){{ end }}
 
 {{- if .Values.secret.secretRef }}
 
@@ -13,7 +13,7 @@ Sensitive env is sourced from your Secret "{{ tpl .Values.secret.secretRef . }}"
 {{- if not .Values.secret.appSecret }}
 
 NOTE: APP_SECRET and ENCRYPTION_KEY were auto-generated and stored in Secret
-"{{ include "twentycrm-chart.generatedSecretName" . }}" (preserved across upgrades).
+"{{ include "twentycrm.generatedSecretName" . }}" (preserved across upgrades).
 For a secret-free setup, manage them yourself via secret.secretRef +
 secret.secretRefKey (and secret.db.secretRef for the DB password).
 {{- end }}
@@ -31,6 +31,6 @@ Access the app:
   http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
 {{- end }}
 {{- else }}
-  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "twentycrm-chart.serverName" . }} {{ .Values.server.service.port }}:{{ .Values.server.service.port }}
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "twentycrm.serverName" . }} {{ .Values.server.service.port }}:{{ .Values.server.service.port }}
   # then open http://localhost:{{ .Values.server.service.port }}
 {{- end }}

@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CHART_DIR: charts/twentycrm-chart
+  CHART_DIR: charts/twentycrm
 
 jobs:
   check:

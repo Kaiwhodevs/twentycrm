@@ -1,5 +1,5 @@
 # Artifact Hub repository metadata.
-# Published to GHCR as oci://ghcr.io/kaiwhodevs/twentycrm-chart:artifacthub.io
+# Published to GHCR as oci://ghcr.io/kaiwhodevs/twentycrm:artifacthub.io
 # by .github/workflows/publish-artifacthub-metadata.yml.
 #
 # repositoryID enables the "Verified Publisher" badge: Artifact Hub matches this
@@ -16,5 +16,5 @@ owners:
 # tag that was never published to Docker Hub, so it is intentionally dropped.
 # (version is a regex; matches the stored version with or without the leading v.)
 ignore:
-  - name: twentycrm-chart
+  - name: twentycrm
     version: '^v?2\.8\.0$'

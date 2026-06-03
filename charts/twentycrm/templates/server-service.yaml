@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "twentycrm-chart.serverName" . }}
-  namespace: {{ include "twentycrm-chart.namespace" . }}
+  name: {{ include "twentycrm.serverName" . }}
+  namespace: {{ include "twentycrm.namespace" . }}
   labels:
-    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    {{- include "twentycrm.labels" . | nindent 4 }}
     app.kubernetes.io/component: server
   {{- $annotations := merge (deepCopy .Values.server.service.annotations) .Values.commonAnnotations }}
   {{- with $annotations }}
@@ -19,5 +19,5 @@ spec:
       targetPort: http
       protocol: TCP
   selector:
-    {{- include "twentycrm-chart.selectorLabels" . | nindent 4 }}
+    {{- include "twentycrm.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: server

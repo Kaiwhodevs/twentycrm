@@ -11,15 +11,15 @@ Every released chart is:
 Verify a release before installing:
 
 ```bash
-cosign verify ghcr.io/kaiwhodevs/twentycrm-chart:v2.8.3 \
-  --certificate-identity-regexp '^https://github.com/Kaiwhodevs/twentycrm-chart/.github/workflows/release-chart.yml@.*' \
+cosign verify ghcr.io/kaiwhodevs/twentycrm:v2.8.3 \
+  --certificate-identity-regexp '^https://github.com/Kaiwhodevs/twentycrm/.github/workflows/release-chart.yml@.*' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
 ## Reporting a vulnerability
 
 If you find a security issue in this chart (the packaging), please report it
-privately via [GitHub Security Advisories](https://github.com/Kaiwhodevs/twentycrm-chart/security/advisories/new)
+privately via [GitHub Security Advisories](https://github.com/Kaiwhodevs/twentycrm/security/advisories/new)
 rather than opening a public issue.
 
 Please include:

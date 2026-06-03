@@ -1,9 +1,9 @@
-# twentycrm-chart
+# twentycrm
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/twentycrm)](https://artifacthub.io/packages/search?repo=twentycrm)
-[![Release](https://img.shields.io/github/v/tag/Kaiwhodevs/twentycrm-chart?label=chart&sort=semver)](https://github.com/Kaiwhodevs/twentycrm-chart/tags)
+[![Release](https://img.shields.io/github/v/tag/Kaiwhodevs/twentycrm?label=chart&sort=semver)](https://github.com/Kaiwhodevs/twentycrm/tags)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Signed with cosign](https://img.shields.io/badge/signed-cosign-2f7de1.svg)](charts/twentycrm-chart/README.md#security--supply-chain)
+[![Signed with cosign](https://img.shields.io/badge/signed-cosign-2f7de1.svg)](charts/twentycrm/README.md#security--supply-chain)
 
 A production-ready Helm chart for [**Twenty CRM**](https://github.com/twentyhq/twenty),
 packaged for Kubernetes and distributed via **OCI on GHCR**.
@@ -17,18 +17,18 @@ Apache-2.0 licensed, cosign signed.
 ## Install
 
 ```bash
-helm install twenty oci://ghcr.io/kaiwhodevs/twentycrm-chart \
+helm install twenty oci://ghcr.io/kaiwhodevs/twentycrm \
   --version v2.8.3 \
   --set config.serverUrl=https://crm.example.com
 ```
 
 Full documentation lives in the chart's README:
-**[charts/twentycrm-chart/README.md](charts/twentycrm-chart/README.md)**.
+**[charts/twentycrm/README.md](charts/twentycrm/README.md)**.
 
 | | |
 | --- | --- |
-| Registry | `oci://ghcr.io/kaiwhodevs/twentycrm-chart` |
-| Artifact Hub | https://artifacthub.io/packages/helm/twentycrm/twentycrm-chart |
+| Registry | `oci://ghcr.io/kaiwhodevs/twentycrm` |
+| Artifact Hub | https://artifacthub.io/packages/helm/twentycrm/twentycrm |
 | Upstream | [twentyhq/twenty](https://github.com/twentyhq/twenty) |
 
 ## Repository layout
@@ -36,7 +36,7 @@ Full documentation lives in the chart's README:
 ```text
 .
 ├── charts/
-│   └── twentycrm-chart/        # the Helm chart
+│   └── twentycrm/        # the Helm chart
 │       ├── Chart.yaml
 │       ├── values.yaml
 │       ├── values.schema.json  # validates values on install/upgrade
@@ -59,7 +59,7 @@ Full documentation lives in the chart's README:
 | `release-chart.yml` | tag `v*` | Package, push to GHCR, and cosign-sign the chart |
 | `publish-artifacthub-metadata.yml` | `artifacthub-repo.yml` change | Publish repo metadata for the Verified Publisher badge |
 
-See [`charts/twentycrm-chart/README.md`](charts/twentycrm-chart/README.md) for
+See [`charts/twentycrm/README.md`](charts/twentycrm/README.md) for
 configuration, production usage, upgrades, and signature verification.
 
 ## Contributing & security

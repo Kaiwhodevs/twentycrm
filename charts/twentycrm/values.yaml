@@ -1,4 +1,4 @@
-# Default values for twentycrm-chart.
+# Default values for twentycrm.
 #
 # This chart mirrors the official Twenty docker-compose
 # (packages/twenty-docker/docker-compose.yml) - same services, same defaults,

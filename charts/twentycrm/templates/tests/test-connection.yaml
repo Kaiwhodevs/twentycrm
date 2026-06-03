@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: {{ include "twentycrm-chart.fullname" . }}-test-connection
-  namespace: {{ include "twentycrm-chart.namespace" . }}
+  name: {{ include "twentycrm.fullname" . }}-test-connection
+  namespace: {{ include "twentycrm.namespace" . }}
   labels:
-    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    {{- include "twentycrm.labels" . | nindent 4 }}
     app.kubernetes.io/component: test
   annotations:
     helm.sh/hook: test
@@ -14,16 +14,16 @@ metadata:
     {{- end }}
 spec:
   restartPolicy: Never
-  {{- include "twentycrm-chart.imagePullSecrets" . | nindent 2 }}
+  {{- include "twentycrm.imagePullSecrets" . | nindent 2 }}
   containers:
     - name: test
       # Uses the Twenty image's curl, mirroring the compose healthcheck.
-      image: {{ include "twentycrm-chart.image" . }}
+      image: {{ include "twentycrm.image" . }}
       imagePullPolicy: {{ .Values.image.pullPolicy }}
       command:
         - sh
         - -c
         - |
-          url="http://{{ include "twentycrm-chart.serverName" . }}:{{ .Values.server.service.port }}{{ .Values.server.livenessProbe.httpGet.path }}"
+          url="http://{{ include "twentycrm.serverName" . }}:{{ .Values.server.service.port }}{{ .Values.server.livenessProbe.httpGet.path }}"
           echo "Probing $url"
           curl --fail --show-error --silent "$url"

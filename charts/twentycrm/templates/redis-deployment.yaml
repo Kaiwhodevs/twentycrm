@@ -2,10 +2,10 @@
 apiVersion: apps/v1
 kind: {{ if .Values.redis.persistence.enabled }}StatefulSet{{ else }}Deployment{{ end }}
 metadata:
-  name: {{ include "twentycrm-chart.redisName" . }}
-  namespace: {{ include "twentycrm-chart.namespace" . }}
+  name: {{ include "twentycrm.redisName" . }}
+  namespace: {{ include "twentycrm.namespace" . }}
   labels:
-    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    {{- include "twentycrm.labels" . | nindent 4 }}
     app.kubernetes.io/component: redis
   {{- with .Values.commonAnnotations }}
   annotations:
@@ -13,31 +13,31 @@ metadata:
   {{- end }}
 spec:
   {{- if .Values.redis.persistence.enabled }}
-  serviceName: {{ include "twentycrm-chart.redisName" . }}
+  serviceName: {{ include "twentycrm.redisName" . }}
   {{- end }}
   replicas: 1
   selector:
     matchLabels:
-      {{- include "twentycrm-chart.selectorLabels" . | nindent 6 }}
+      {{- include "twentycrm.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: redis
   template:
     metadata:
       labels:
-        {{- include "twentycrm-chart.selectorLabels" . | nindent 8 }}
+        {{- include "twentycrm.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: redis
       {{- with .Values.commonAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
-      {{- include "twentycrm-chart.imagePullSecrets" . | nindent 6 }}
+      {{- include "twentycrm.imagePullSecrets" . | nindent 6 }}
       {{- with .Values.redis.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
         - name: redis
-          image: {{ include "twentycrm-chart.imageRef" (dict "image" .Values.redis.image "tag" (.Values.redis.image.tag | default "latest") "global" .Values.global) }}
+          image: {{ include "twentycrm.imageRef" (dict "image" .Values.redis.image "tag" (.Values.redis.image.tag | default "latest") "global" .Values.global) }}
           imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
           {{- with .Values.redis.securityContext }}
           securityContext:
@@ -97,12 +97,12 @@ spec:
     - metadata:
         name: redis-data
         labels:
-          {{- include "twentycrm-chart.selectorLabels" . | nindent 10 }}
+          {{- include "twentycrm.selectorLabels" . | nindent 10 }}
           app.kubernetes.io/component: redis
       spec:
         accessModes:
           {{- toYaml .Values.redis.persistence.accessModes | nindent 10 }}
-        {{- include "twentycrm-chart.storageClass" (dict "value" .Values.redis.persistence.storageClass "global" .Values.global) | nindent 8 }}
+        {{- include "twentycrm.storageClass" (dict "value" .Values.redis.persistence.storageClass "global" .Values.global) | nindent 8 }}
         resources:
           requests:
             storage: {{ .Values.redis.persistence.size }}

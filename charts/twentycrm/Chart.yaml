@@ -1,5 +1,5 @@
 apiVersion: v2
-name: twentycrm-chart
+name: twentycrm
 description: |
   Twenty CRM (twentyhq/twenty) packaged for Kubernetes. Mirrors the official
   twenty-docker docker-compose.yml - same services (server, worker, db, redis),
@@ -13,7 +13,7 @@ icon: https://raw.githubusercontent.com/twentyhq/twenty/v2.8.3/packages/twenty-w
 home: https://twenty.com
 sources:
   - https://github.com/twentyhq/twenty
-  - https://github.com/kaiwhodevs/twentycrm-chart
+  - https://github.com/kaiwhodevs/twentycrm
 keywords:
   - crm
   - twenty
@@ -29,7 +29,7 @@ annotations:
     - name: Twenty CRM
       url: https://github.com/twentyhq/twenty
     - name: Chart source
-      url: https://github.com/kaiwhodevs/twentycrm-chart
+      url: https://github.com/kaiwhodevs/twentycrm
   artifacthub.io/images: |
     - name: twenty
       image: twentycrm/twenty:v2.8.3

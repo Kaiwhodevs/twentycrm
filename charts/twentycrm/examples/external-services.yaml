@@ -4,7 +4,7 @@
 #   kubectl create secret generic twenty-extdb \
 #     --from-literal=database_password="CHANGE_ME"
 #
-#   helm install twenty oci://ghcr.io/kaiwhodevs/twentycrm-chart \
+#   helm install twenty oci://ghcr.io/kaiwhodevs/twentycrm \
 #     --version v2.8.3 -f external-services.yaml
 config:
   serverUrl: https://crm.example.com

@@ -4,18 +4,18 @@ Thanks for your interest in improving the Twenty CRM Helm chart.
 
 ## Local development
 
-The chart lives in [`charts/twentycrm-chart`](charts/twentycrm-chart). You need
+The chart lives in [`charts/twentycrm`](charts/twentycrm). You need
 [Helm](https://helm.sh) 3.8+ installed.
 
 ```bash
 # Lint
-helm lint charts/twentycrm-chart
+helm lint charts/twentycrm
 
 # Render the templates with the default values
-helm template twenty charts/twentycrm-chart
+helm template twenty charts/twentycrm
 
 # Render with an example values file
-helm template twenty charts/twentycrm-chart -f charts/twentycrm-chart/examples/production.yaml
+helm template twenty charts/twentycrm -f charts/twentycrm/examples/production.yaml
 ```
 
 ### Validate against the Kubernetes API
@@ -24,7 +24,7 @@ Schema-validate the rendered manifests with
 [kubeconform](https://github.com/yannh/kubeconform):
 
 ```bash
-helm template twenty charts/twentycrm-chart \
+helm template twenty charts/twentycrm \
   | kubeconform -strict -summary -kubernetes-version 1.29.0 -schema-location default
 ```
 

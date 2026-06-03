@@ -1,13 +1,13 @@
 {{- if .Values.ingress.enabled }}
-{{- $fullName := include "twentycrm-chart.serverName" . -}}
+{{- $fullName := include "twentycrm.serverName" . -}}
 {{- $svcPort := .Values.server.service.port -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "twentycrm-chart.serverName" . }}
-  namespace: {{ include "twentycrm-chart.namespace" . }}
+  name: {{ include "twentycrm.serverName" . }}
+  namespace: {{ include "twentycrm.namespace" . }}
   labels:
-    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    {{- include "twentycrm.labels" . | nindent 4 }}
     app.kubernetes.io/component: server
   {{- $annotations := merge (deepCopy .Values.ingress.annotations) .Values.commonAnnotations }}
   {{- with $annotations }}

@@ -2,10 +2,10 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "twentycrm-chart.serverName" . }}
-  namespace: {{ include "twentycrm-chart.namespace" . }}
+  name: {{ include "twentycrm.serverName" . }}
+  namespace: {{ include "twentycrm.namespace" . }}
   labels:
-    {{- include "twentycrm-chart.labels" . | nindent 4 }}
+    {{- include "twentycrm.labels" . | nindent 4 }}
     app.kubernetes.io/component: server
   {{- with .Values.commonAnnotations }}
   annotations:
@@ -19,6 +19,6 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "twentycrm-chart.selectorLabels" . | nindent 6 }}
+      {{- include "twentycrm.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: server
 {{- end }}
