@@ -9,7 +9,7 @@ type: application
 version: v2.8.0
 # Application version — the twentycrm/twenty image tag deployed by default.
 appVersion: v2.8.0
-icon: https://twenty.com/images/core/logo.svg
+icon: https://raw.githubusercontent.com/twentyhq/twenty/v2.8.0/packages/twenty-website/public/images/core/logo.svg
 home: https://twenty.com
 sources:
   - https://github.com/twentyhq/twenty
