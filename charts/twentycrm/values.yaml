@@ -24,7 +24,6 @@ global:
   imagePullSecrets: []
   # Default StorageClass for all PersistentVolumeClaims.
   storageClass: ""
-
 # -----------------------------------------------------------------------------
 # Common parameters
 # -----------------------------------------------------------------------------
@@ -39,24 +38,20 @@ commonLabels: {}
 commonAnnotations: {}
 # Array of extra raw manifests (strings or maps) to deploy with the release.
 extraDeploy: []
-
 # -- twentycrm/twenty image used by both the server and the worker.
 image:
-  registry: ""               # overrides global.imageRegistry for this image
+  registry: "" # overrides global.imageRegistry for this image
   repository: twentycrm/twenty
   # Image tag. Tracks the upstream release (v-prefixed). Empty -> .Chart.AppVersion.
-  tag: "v2.8.3"
+  tag: "v2.9.0"
   pullPolicy: IfNotPresent
-
 # -- Pull secrets for the images (merged with global.imagePullSecrets).
 imagePullSecrets: []
-
 serviceAccount:
   create: true
   name: ""
   automount: true
   annotations: {}
-
 # Pod-level and container-level security contexts applied to server & worker.
 # fsGroup 1000 matches the Twenty image's node user (uid/gid 1000) so the
 # .local-storage PVC is group-writable on mount - without it, Kubernetes mounts
@@ -64,7 +59,6 @@ serviceAccount:
 podSecurityContext:
   fsGroup: 1000
 securityContext: {}
-
 # ---------------------------------------------------------------------------
 # server - the Twenty API/app container (compose service "server")
 # ---------------------------------------------------------------------------
@@ -143,7 +137,6 @@ server:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-
 # ---------------------------------------------------------------------------
 # worker - background jobs (compose service "worker", "yarn worker:prod")
 # ---------------------------------------------------------------------------
@@ -162,7 +155,6 @@ worker:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-
 # ---------------------------------------------------------------------------
 # Non-sensitive environment -> ConfigMap (server & worker, via envFrom)
 # ---------------------------------------------------------------------------
@@ -178,11 +170,10 @@ config:
   # Attachment / file storage. Twenty REQUIRES STORAGE_TYPE to be set to a valid
   # value ("local" or "s3"); an empty string fails config validation on startup.
   storage:
-    type: "local"   # STORAGE_TYPE  ("local" or "s3")
-    s3Region: ""    # STORAGE_S3_REGION
-    s3Name: ""      # STORAGE_S3_NAME
-    s3Endpoint: ""  # STORAGE_S3_ENDPOINT
-
+    type: "local" # STORAGE_TYPE  ("local" or "s3")
+    s3Region: "" # STORAGE_S3_REGION
+    s3Name: "" # STORAGE_S3_NAME
+    s3Endpoint: "" # STORAGE_S3_ENDPOINT
 # -- Extra non-sensitive env vars merged into the ConfigMap. Use for the
 # optional integrations commented out in the upstream compose, e.g.:
 #   EMAIL_FROM_ADDRESS: contact@yourdomain.com
@@ -192,7 +183,6 @@ config:
 #   MESSAGING_PROVIDER_GMAIL_ENABLED: "true"
 #   AUTH_GOOGLE_CLIENT_ID: ...
 extraEnv: {}
-
 # ---------------------------------------------------------------------------
 # Sensitive values (Supabase-style secret blocks).
 #
@@ -208,24 +198,22 @@ extraEnv: {}
 # clean; the field names are fixed and map to Twenty's env vars internally.
 # ---------------------------------------------------------------------------
 secret:
-  appSecret: ""              # -> APP_SECRET (auto-generated when blank)
-  encryptionKey: ""          # -> ENCRYPTION_KEY (auto-generated when blank)
-  fallbackEncryptionKey: ""  # -> FALLBACK_ENCRYPTION_KEY
+  appSecret: "" # -> APP_SECRET (auto-generated when blank)
+  encryptionKey: "" # -> ENCRYPTION_KEY (auto-generated when blank)
+  fallbackEncryptionKey: "" # -> FALLBACK_ENCRYPTION_KEY
   secretRef: ""
   secretRefKey:
     appSecret: app_secret
     encryptionKey: encryption_key
     fallbackEncryptionKey: fallback_encryption_key
     databaseUrl: database_url
-
   # PostgreSQL password. Used by the bundled db (POSTGRES_PASSWORD) and to build
   # PG_DATABASE_URL at runtime. Ignored when externalDatabase.enabled is true.
   db:
-    password: ""             # auto-generated when blank
+    password: "" # auto-generated when blank
     secretRef: ""
     secretRefKey:
       password: database_password
-
 # ---------------------------------------------------------------------------
 # PostgreSQL - bundled "db" service (postgres:16)
 # ---------------------------------------------------------------------------
@@ -237,8 +225,8 @@ postgresql:
     tag: "16"
     pullPolicy: IfNotPresent
   auth:
-    username: postgres   # POSTGRES_USER (non-sensitive). Password -> secret.db
-    database: default    # POSTGRES_DB   (non-sensitive)
+    username: postgres # POSTGRES_USER (non-sensitive). Password -> secret.db
+    database: default # POSTGRES_DB   (non-sensitive)
   # Hostname override; defaults to the in-cluster db Service when empty.
   host: ""
   port: 5432
@@ -254,7 +242,6 @@ postgresql:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-
 # External PostgreSQL (n8n-style). When enabled, the bundled postgresql is NOT
 # deployed (postgresql.enabled is ignored) and PG_DATABASE_URL is assembled from
 # the non-sensitive fields below plus the password sourced from `secretRef` at
@@ -265,11 +252,10 @@ externalDatabase:
   port: 5432
   database: default
   user: postgres
-  ssl: false               # true -> appends ?sslmode=require
-  secretRef: ""            # required when enabled: holds the DB password
+  ssl: false # true -> appends ?sslmode=require
+  secretRef: "" # required when enabled: holds the DB password
   secretRefKey:
     password: database_password
-
 # ---------------------------------------------------------------------------
 # Redis - bundled "redis" service
 # ---------------------------------------------------------------------------
@@ -278,7 +264,7 @@ redis:
   image:
     registry: ""
     repository: redis
-    tag: ""   # "" -> "latest" (mirrors `image: redis` in the compose)
+    tag: "" # "" -> "latest" (mirrors `image: redis` in the compose)
     pullPolicy: IfNotPresent
   # compose: command ["--maxmemory-policy", "noeviction"]
   maxmemoryPolicy: noeviction
@@ -296,11 +282,9 @@ redis:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-
 # External Redis: set redis.enabled=false and supply a URL.
 externalRedis:
-  url: ""   # redis://host:6379
-
+  url: "" # redis://host:6379
 # ---------------------------------------------------------------------------
 # Shared local storage (compose volume "server-local-data", mounted by both
 # server and worker). With STORAGE_TYPE=local both pods share this volume, so on
@@ -314,7 +298,6 @@ localStorage:
     storageClass: ""
     accessModes:
       - ReadWriteOnce
-
 # ---------------------------------------------------------------------------
 # Ingress for the server Service.
 # ---------------------------------------------------------------------------
