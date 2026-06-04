@@ -4,7 +4,7 @@
 #
 # repositoryID enables the "Verified Publisher" badge: Artifact Hub matches this
 # against the repository you registered (Control Panel -> Repositories -> ID).
-repositoryID: c35bcc34-b770-4459-a979-1af78ac95c1f
+repositoryID: 3def451f-6e28-4a57-8573-4742242329e5
 
 # Optional: claim repository ownership. The email must match the one on your
 # Artifact Hub account.
