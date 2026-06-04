@@ -1,4 +1,4 @@
-# twentycrm
+# TwentyCRM Kubernates Helm Chart
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/twentycrm)](https://artifacthub.io/packages/search?repo=twentycrm)
 [![Release](https://img.shields.io/github/v/tag/Kaiwhodevs/twentycrm?label=chart&sort=semver)](https://github.com/Kaiwhodevs/twentycrm/tags)
