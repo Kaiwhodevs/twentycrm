@@ -43,7 +43,7 @@ image:
   registry: "" # overrides global.imageRegistry for this image
   repository: twentycrm/twenty
   # Image tag. Tracks the upstream release (v-prefixed). Empty -> .Chart.AppVersion.
-  tag: "v2.16.0"
+  tag: "v2.16.1"
   pullPolicy: IfNotPresent
 # -- Pull secrets for the images (merged with global.imagePullSecrets).
 imagePullSecrets: []
